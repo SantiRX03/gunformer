@@ -15,7 +15,7 @@ CONTROLS:
 
 WAD for movement
 S for dash roll
-1/2/3/4 for the different weapons (Gun, Sniper, Shotgun, Knife)
+1/2/3/4 for the different weapons (Glock, Sniper, Shotgun, Knife)
 Q throw the knife (when 4 is press)
 
 not implemented/broken at the moment:
@@ -28,5 +28,7 @@ The game will feature perfect dodging, double jumps, rolling and obviously GUNS!
 
 If the testers have any recommendations or things you want to add you are welcome to tell me, this project is very bad but I will try my best to fix it 
 
+
+I make this project for fun, I want coding as my career in the future and I would love to make more projects like this one (as a beginner this experience IS SO FUN! but I would try my best to don't rely on tutorials and/or ai)
 
 Have a nice day <3
