@@ -90,12 +90,20 @@ class MC(pygame.sprite.Sprite):
         if weapon_name == "glock":
             self.weapon = Glock()
             self.shoot_cooldown = 300
+            self.max_ammo = 15
         if weapon_name == "sniper":
             self.weapon = Sniper()
-            self.shoot_cooldown = 1000
+            self.shoot_cooldown = 500
+            self.max_ammo = 5
+            if self.ammo > self.max_ammo:
+                self.ammo = self.max_ammo
         if weapon_name == "shotgun":
             self.weapon = Shotgun()
             self.shoot_cooldown = 500
+            self.weapon_uses = 5
+            self.max_ammo = 5
+            if self.ammo > self.max_ammo:
+                self.ammo = self.max_ammo
         if weapon_name == "knife":
             self.weapon = Knife()
             self.shoot_cooldown = 200
@@ -140,6 +148,7 @@ class MC(pygame.sprite.Sprite):
                 self.is_rolling = False
                 self.invulnerable = False
             else:
+                self.invulnerable = True
                 dx = self.speed * 1.7 * self.direction
                 dash_velocity = min(5, self.max_dash_speed)
                 dx = dash_velocity * self.direction
@@ -218,8 +227,15 @@ class MC(pygame.sprite.Sprite):
         if self.sniper_recomposing:
             if current_time - self.sniper_recompose_time > 1000:
                 self.sniper_recomposing = False
-                self.current_weapon = "glock"
+            else:
+                if self.current_weapon == "sniper":
+                    return
+        if self.is_reloading:
             return
+        if self.current_weapon != "knife":
+            if self.ammo <= 0:
+                self.start_reload()
+                return
         if current_time - self.last_shot_time > self.shoot_cooldown:
             from bullet import Bullet
             self.last_shot_time = current_time
@@ -227,10 +243,12 @@ class MC(pygame.sprite.Sprite):
             if self.current_weapon == "glock":
                 new_bullet = Bullet(self.weapon_x, self.weapon_y, self.angle)
                 bullet_group.add(new_bullet)
+                self.ammo -= 1
             elif self.current_weapon == "sniper":
                 new_bullet = Bullet(self.weapon_x, self.weapon_y, self.angle)
                 new_bullet.speed = 35
                 bullet_group.add(new_bullet)
+                self.ammo -= 1
                 self.sniper_recomposing = True
                 self.sniper_recompose_time = current_time
             elif self.current_weapon == "shotgun":
@@ -238,10 +256,11 @@ class MC(pygame.sprite.Sprite):
                     perdigon = Bullet(self.weapon_x, self.weapon_y, self.angle + dispersion)
                     perdigon.lifetime = 400
                     bullet_group.add(perdigon)
-                self.weapon_uses -= 1
+                self.ammo -= 1
+                if self.ammo <= 0:
+                    self.weapon_uses -= 1
                 if self.weapon_uses <= 0:
                     self.change_weapon("glock")
-                self.weapon_uses -= 1
                 if self.weapon_uses <= 0:
                     self.current_weapon = "glock"
             elif self.current_weapon == "knife":
@@ -251,13 +270,15 @@ class MC(pygame.sprite.Sprite):
                     bullet_group.add(cut)
 
     def check_perfect_dodge(self, incoming_hitbox, particle_group):
-        current_time = pygame.time.get_ticks
-        if self.is_rolling and (current_time - self.last_roll_time < 150) and not self.time_stopped:
+        current_time = pygame.time.get_ticks()
+        if self.is_rolling and (current_time - self.last_roll_time < 400) and not self.time_stopped:
             self.time_stopped = True
-            self.time_stop_start =- current_time
+            self.time_stop_start = current_time
             for _ in range(25):
                 spark = Particle(self.rect.centerx, self.rect.centery)
-                spark.image.fill((0, 191, 255))
+                spark.image.fill((0, 255, 255))
+                spark.velocity_x *= 1.5
+                spark.velocity_y *= 1.5
                 particle_group.add(spark)
             return True
         return False
@@ -277,7 +298,7 @@ class MC(pygame.sprite.Sprite):
 
     def update_reload(self):
         if self.is_reloading:
-            if pygame.time.get_ticks() - self.reload_time > self.reload_cooldwon:
+            if pygame.time.get_ticks() - self.reload_time > self.reload_cooldown:
                 self.ammo = self.max_ammo
                 self.is_reloading = False
 

@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 from Platforms import Platform
 from Enemy import Enemy
 
@@ -27,9 +28,20 @@ class LevelManager:
     def reset(self):
         self.max_map_x = 0
 
-    def generate_next_block(self, platform_group, enemy_group):
+    def generate_next_block(self, platform_group, enemy_group, fase_r = 0, fase_g = 0, fase_b = 0):
         chosen_block = random.choice(self.designs)
         spawn_probability = min(0.20 + (self.max_map_x / 15000), 0.85)
+
+        frequency = self.max_map_x / 2000
+
+        r = int(187 + 67 * math.sin(frequency + fase_r))
+        g = int(187 + 67 * math.sin(frequency + fase_g))
+        b = int(187 + 67 * math.sin(frequency + fase_b))
+
+        PLATFORM_COLOR = (r, g, b)
+
+
+
         for plat in chosen_block:
             x_real = self.max_map_x + plat[0]
             y_real = plat[1]
@@ -37,13 +49,14 @@ class LevelManager:
             height = plat[3]
             enemy_present = plat[4]
 
-            new_plat = Platform(x_real, y_real, width, height, "assests/Platforms/mainplatform/0.png", self.color_player)
+            new_plat = Platform(x_real, y_real, width, height, "assests/Platforms/mainplatform/0.png", PLATFORM_COLOR)
             platform_group.add(new_plat)
 
             if enemy_present or (random.random() < spawn_probability):
                 new_enemy = Enemy(x_real + (width // 2), y_real - 40, self.color_enemy)
                 enemy_group.add(new_enemy)
                 if self.max_map_x > 5000:
+                    new_enemy.shoot_cooldown -= 1
                     new_enemy.speed += 1
                     new_enemy.health += 1
         self.max_map_x += 800
